@@ -3,7 +3,7 @@ import type { Root, Element, Text } from 'hast'
 import type { Plugin } from 'unified'
 import type { Theme } from '../themes/index'
 
-const MATH_SVG_ENDPOINT = 'https://latex.codecogs.com/svg.latex?'
+const MATH_SVG_ENDPOINT = 'https://www.zhihu.com/equation?tex='
 
 export const inlineStylePlugin: Plugin<[Theme], Root> = (theme) => {
   return (tree) => {
