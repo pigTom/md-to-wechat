@@ -1,4 +1,4 @@
-import { visit } from 'unist-util-visit'
+import { visit, SKIP } from 'unist-util-visit'
 import type { Root, Element } from 'hast'
 import type { Plugin } from 'unified'
 import type { Theme } from '../themes/index'
@@ -9,16 +9,15 @@ export const inlineStylePlugin: Plugin<[Theme], Root> = (theme) => {
       const props = node.properties ?? {}
       const classes = (props.className as string[]) ?? []
 
-      // Preserve KaTeX elements — they need class-based CSS to render math
+      // Preserve KaTeX subtrees — they need class-based CSS to render math
       if (classes.some(cls => String(cls).startsWith('katex'))) {
-        node.properties = props
-        return
+        return SKIP
       }
 
-      // Merge theme style for this tag with any existing style (preserves plugin-injected styles)
+      // Merge theme style for this tag with any existing style (existing wins over theme)
       const themeStyle = theme.styles[node.tagName] ?? ''
       const existingStyle = String(props.style ?? '')
-      props.style = mergeStyles(existingStyle, themeStyle)
+      props.style = mergeStyles(themeStyle, existingStyle)
 
       // Map hljs-* class names to inline color styles
       const hljsColor = classes
@@ -46,8 +45,8 @@ export const inlineStylePlugin: Plugin<[Theme], Root> = (theme) => {
 }
 
 function mergeStyles(existing: string, incoming: string): string {
-  if (!existing) return incoming
-  if (!incoming) return existing
+  if (!existing?.trim()) return incoming
+  if (!incoming?.trim()) return existing
   const base = existing.trimEnd()
   return base.endsWith(';') ? base + incoming : base + ';' + incoming
 }
