@@ -14,6 +14,8 @@ export const wechatGreen: Theme = {
     code: 'font-family:monospace;font-size:13px;color:#333;',
     strong: 'font-weight:bold;color:#333;',
     em: 'font-style:italic;color:#555;',
+    ul: 'padding-left:1.5em;margin:10px 0;list-style-type:disc;',
+    ol: 'padding-left:1.5em;margin:10px 0;list-style-type:decimal;',
     li: 'font-size:15px;color:#555;line-height:1.8;margin:4px 0;',
     a:  'color:#07c160;text-decoration:none;',
     table: 'border-collapse:collapse;width:100%;margin:12px 0;',

@@ -1,7 +1,9 @@
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
+import remarkMath from 'remark-math'
 import remarkRehype from 'remark-rehype'
 import rehypeHighlight from 'rehype-highlight'
+import rehypeKatex from 'rehype-katex'
 import rehypeStringify from 'rehype-stringify'
 import { inlineStylePlugin } from './inlineStylePlugin'
 import { wechatGreen } from '../themes/wechat-green'
@@ -11,6 +13,18 @@ function process(md: string) {
     .use(remarkParse)
     .use(remarkRehype)
     .use(rehypeHighlight, { detect: true, ignoreMissing: true })
+    .use(inlineStylePlugin, wechatGreen)
+    .use(rehypeStringify)
+    .processSync(md)
+    .toString()
+}
+
+function processWithMath(md: string) {
+  return unified()
+    .use(remarkParse)
+    .use(remarkMath)
+    .use(remarkRehype)
+    .use(rehypeKatex, { output: 'mathml' })
     .use(inlineStylePlugin, wechatGreen)
     .use(rehypeStringify)
     .processSync(md)
@@ -56,5 +70,25 @@ describe('inlineStylePlugin', () => {
     const html = process('```js\ncode\n```')
     expect(html).toContain('background:#f5f5f5')  // pre style
     expect(html).toContain('font-family:monospace') // code style
+  })
+
+  it('renders inline math as <img> with SVG src and inline styles', () => {
+    const html = processWithMath('Energy: $E=mc^2$ done.')
+    expect(html).not.toContain('<math')
+    expect(html).not.toContain('class="math')
+    expect(html).toContain('<img')
+    expect(html).toContain('src="https://latex.codecogs.com/svg.latex?E%3Dmc%5E2"')
+    expect(html).toContain('alt="E=mc^2"')
+    expect(html).toContain('display:inline-block')
+    expect(html).toContain('vertical-align:middle')
+  })
+
+  it('renders display math as block <img>', () => {
+    const html = processWithMath('$$\n\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}\n$$')
+    expect(html).not.toContain('<math')
+    expect(html).toContain('<img')
+    expect(html).toMatch(/src="https:\/\/latex\.codecogs\.com\/svg\.latex\?[^"]*sum/)
+    expect(html).toContain('display:block')
+    expect(html).toContain('margin:1em auto')
   })
 })

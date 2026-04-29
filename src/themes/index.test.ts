@@ -16,7 +16,7 @@ describe('themes', () => {
   })
 
   it('each theme styles covers required tags', () => {
-    const requiredTags = ['h1', 'h2', 'h3', 'p', 'blockquote', 'pre', 'code', 'strong', 'em', 'li']
+    const requiredTags = ['h1', 'h2', 'h3', 'p', 'blockquote', 'pre', 'code', 'strong', 'em', 'ul', 'ol', 'li']
     themes.forEach((theme: Theme) => {
       requiredTags.forEach(tag => {
         expect(theme.styles[tag], `${theme.id} missing style for ${tag}`).toBeTruthy()

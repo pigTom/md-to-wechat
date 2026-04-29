@@ -14,6 +14,8 @@ export const warm: Theme = {
     code: 'font-family:monospace;font-size:13px;color:#555;',
     strong: 'font-weight:bold;color:#a07b50;',
     em: 'font-style:italic;color:#a07b50;',
+    ul: 'padding-left:1.5em;margin:10px 0;list-style-type:disc;',
+    ol: 'padding-left:1.5em;margin:10px 0;list-style-type:decimal;',
     li: 'font-size:15px;color:#555;line-height:2;margin:4px 0;',
     a:  'color:#a07b50;text-decoration:none;',
     table: 'border-collapse:collapse;width:100%;margin:12px 0;',

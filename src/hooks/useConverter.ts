@@ -20,7 +20,7 @@ export async function convertMarkdown(markdown: string, theme: Theme): Promise<s
     .use(remarkToc, { heading: '目录', tight: true })
     .use(remarkMath)
     .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeKatex)
+    .use(rehypeKatex, { output: 'mathml' })
     .use(rehypeHighlight, { detect: true, ignoreMissing: true })
     .use(inlineStylePlugin, theme)
     .use(rehypeStringify, { allowDangerousHtml: true })

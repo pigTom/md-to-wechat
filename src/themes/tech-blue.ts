@@ -14,6 +14,8 @@ export const techBlue: Theme = {
     code: 'font-family:monospace;font-size:13px;color:#cdd6f4;',
     strong: 'font-weight:bold;color:#222;',
     em: 'font-style:italic;color:#444;',
+    ul: 'padding-left:1.5em;margin:10px 0;list-style-type:disc;',
+    ol: 'padding-left:1.5em;margin:10px 0;list-style-type:decimal;',
     li: 'font-size:15px;color:#444;line-height:1.8;margin:4px 0;',
     a:  'color:#576cbc;text-decoration:none;',
     table: 'border-collapse:collapse;width:100%;margin:12px 0;',

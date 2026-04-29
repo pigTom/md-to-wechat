@@ -14,6 +14,8 @@ export const rose: Theme = {
     code: 'font-family:monospace;font-size:13px;color:#f8c8d4;',
     strong: 'font-weight:bold;color:#e94560;',
     em: 'font-style:italic;color:#555;',
+    ul: 'padding-left:1.5em;margin:10px 0;list-style-type:disc;',
+    ol: 'padding-left:1.5em;margin:10px 0;list-style-type:decimal;',
     li: 'font-size:15px;color:#444;line-height:1.8;margin:4px 0;',
     a:  'color:#e94560;text-decoration:none;',
     table: 'border-collapse:collapse;width:100%;margin:12px 0;',
