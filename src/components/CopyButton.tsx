@@ -1,21 +1,29 @@
 import { useState, useCallback } from 'react'
 
-type CopyButtonProps = { html: string }
+type CopyButtonProps = {
+  html: string
+  contentRef: React.RefObject<HTMLDivElement | null>
+}
 
-export function CopyButton({ html }: CopyButtonProps) {
+export function CopyButton({ html, contentRef }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
-  const handleCopy = useCallback(async () => {
-    if (!html) return
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        'text/html': new Blob([html], { type: 'text/html' }),
-        'text/plain': new Blob([html], { type: 'text/plain' }),
-      }),
-    ])
+  const handleCopy = useCallback(() => {
+    const el = contentRef.current
+    if (!el || !html) return
+
+    const range = document.createRange()
+    range.selectNodeContents(el)
+    const selection = window.getSelection()
+    if (!selection) return
+    selection.removeAllRanges()
+    selection.addRange(range)
+    document.execCommand('copy')
+    selection.removeAllRanges()
+
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }, [html])
+  }, [html, contentRef])
 
   return (
     <button

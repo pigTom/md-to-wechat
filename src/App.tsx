@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Editor } from './components/Editor'
 import { Preview } from './components/Preview'
 import { ThemeSwitcher } from './components/ThemeSwitcher'
@@ -11,6 +11,7 @@ export default function App() {
   const [markdown, setMarkdown] = useState(SAMPLE_MARKDOWN)
   const [theme, setTheme] = useState<Theme>(defaultTheme)
   const html = useConverter(markdown, theme)
+  const previewRef = useRef<HTMLDivElement>(null)
 
   return (
     <div className="app">
@@ -22,13 +23,13 @@ export default function App() {
           <ThemeSwitcher current={theme} onChange={setTheme} />
         </div>
         <div className="header-right">
-          <CopyButton html={html} />
+          <CopyButton html={html} contentRef={previewRef} />
         </div>
       </header>
       <main className="app-main">
         <Editor value={markdown} onChange={setMarkdown} />
         <div className="divider" />
-        <Preview html={html} />
+        <Preview html={html} ref={previewRef} />
       </main>
     </div>
   )

@@ -1,5 +1,6 @@
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
 import remarkToc from 'remark-toc'
 import remarkMath from 'remark-math'
 import remarkRehype from 'remark-rehype'
@@ -15,6 +16,7 @@ export async function convertMarkdown(markdown: string, theme: Theme): Promise<s
 
   const result = await unified()
     .use(remarkParse)
+    .use(remarkGfm)
     .use(remarkToc, { heading: '目录', tight: true })
     .use(remarkMath)
     .use(remarkRehype, { allowDangerousHtml: true })

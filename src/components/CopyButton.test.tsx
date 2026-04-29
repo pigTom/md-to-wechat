@@ -1,44 +1,46 @@
-import { render, screen, act, fireEvent } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CopyButton } from './CopyButton'
 
-const mockWrite = vi.fn().mockResolvedValue(undefined)
+function makeRef(el: HTMLDivElement | null) {
+  return { current: el } as React.RefObject<HTMLDivElement>
+}
 
 beforeEach(() => {
-  mockWrite.mockClear()
-  Object.defineProperty(navigator, 'clipboard', {
-    value: { write: mockWrite },
+  document.execCommand = vi.fn().mockReturnValue(true)
+  const mockRange = { selectNodeContents: vi.fn() }
+  document.createRange = vi.fn().mockReturnValue(mockRange)
+  Object.defineProperty(window, 'getSelection', {
+    value: () => ({ removeAllRanges: vi.fn(), addRange: vi.fn() }),
     configurable: true,
-    writable: true,
   })
 })
 
 describe('CopyButton', () => {
   it('renders copy button label', () => {
-    render(<CopyButton html="<p>test</p>" />)
+    render(<CopyButton html="<p>test</p>" contentRef={makeRef(null)} />)
     expect(screen.getByRole('button', { name: /复制到微信/i })).toBeInTheDocument()
   })
 
-  it('calls clipboard.write with text/html ClipboardItem', async () => {
-    render(<CopyButton html="<p>test</p>" />)
+  it('calls execCommand copy when clicked', async () => {
+    const div = document.createElement('div')
+    render(<CopyButton html="<p>test</p>" contentRef={makeRef(div)} />)
     await userEvent.click(screen.getByRole('button'))
-    expect(mockWrite).toHaveBeenCalledTimes(1)
-    const [items] = mockWrite.mock.calls[0]
-    expect(items[0]).toBeInstanceOf(ClipboardItem)
+    expect(document.execCommand).toHaveBeenCalledWith('copy')
   })
 
   it('shows success feedback after copy', async () => {
-    render(<CopyButton html="<p>test</p>" />)
+    const div = document.createElement('div')
+    render(<CopyButton html="<p>test</p>" contentRef={makeRef(div)} />)
     await userEvent.click(screen.getByRole('button'))
     expect(screen.getByText(/已复制/i)).toBeInTheDocument()
   })
 
-  it('reverts label to original after 2 seconds', async () => {
+  it('reverts label to original after 2 seconds', () => {
     vi.useFakeTimers()
-    render(<CopyButton html="<p>test</p>" />)
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button'))
-    })
+    const div = document.createElement('div')
+    render(<CopyButton html="<p>test</p>" contentRef={makeRef(div)} />)
+    act(() => { screen.getByRole('button').click() })
     expect(screen.getByText(/已复制/i)).toBeInTheDocument()
     act(() => { vi.advanceTimersByTime(2000) })
     expect(screen.getByText(/复制到微信/i)).toBeInTheDocument()
@@ -49,7 +51,7 @@ describe('CopyButton', () => {
   })
 
   it('is disabled when html is empty', () => {
-    render(<CopyButton html="" />)
+    render(<CopyButton html="" contentRef={makeRef(null)} />)
     expect(screen.getByRole('button')).toBeDisabled()
   })
 })

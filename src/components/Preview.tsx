@@ -1,3 +1,5 @@
+import { forwardRef } from 'react'
+
 const EMPTY_STATE = `
 <div style="text-align:center;padding:60px 20px;color:#bbb;">
   <div style="font-size:48px;margin-bottom:16px;">📄</div>
@@ -8,7 +10,7 @@ const EMPTY_STATE = `
 
 type PreviewProps = { html: string }
 
-export function Preview({ html }: PreviewProps) {
+export const Preview = forwardRef<HTMLDivElement, PreviewProps>(({ html }, ref) => {
   return (
     <div className="preview-panel">
       <div className="panel-toolbar">
@@ -16,10 +18,12 @@ export function Preview({ html }: PreviewProps) {
       </div>
       <div className="preview-scroll">
         <div
+          ref={ref}
           className="preview-content"
           dangerouslySetInnerHTML={{ __html: html || EMPTY_STATE }}
         />
       </div>
     </div>
   )
-}
+})
+Preview.displayName = 'Preview'
