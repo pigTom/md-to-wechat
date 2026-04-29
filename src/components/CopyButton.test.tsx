@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CopyButton } from './CopyButton'
 
@@ -32,13 +32,17 @@ describe('CopyButton', () => {
   })
 
   it('reverts label to original after 2 seconds', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) })
+    vi.useFakeTimers()
     render(<CopyButton html="<p>test</p>" />)
-    await user.click(screen.getByRole('button'))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button'))
+    })
     expect(screen.getByText(/已复制/i)).toBeInTheDocument()
     act(() => { vi.advanceTimersByTime(2000) })
     expect(screen.getByText(/复制到微信/i)).toBeInTheDocument()
+  })
+
+  afterEach(() => {
     vi.useRealTimers()
   })
 
