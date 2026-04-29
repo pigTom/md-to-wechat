@@ -2,12 +2,12 @@ import { render, screen, act, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CopyButton } from './CopyButton'
 
-const mockWriteText = vi.fn().mockResolvedValue(undefined)
+const mockWrite = vi.fn().mockResolvedValue(undefined)
 
 beforeEach(() => {
-  mockWriteText.mockClear()
+  mockWrite.mockClear()
   Object.defineProperty(navigator, 'clipboard', {
-    value: { writeText: mockWriteText },
+    value: { write: mockWrite },
     configurable: true,
     writable: true,
   })
@@ -19,10 +19,12 @@ describe('CopyButton', () => {
     expect(screen.getByRole('button', { name: /复制到微信/i })).toBeInTheDocument()
   })
 
-  it('calls clipboard.writeText with the html', async () => {
+  it('calls clipboard.write with text/html ClipboardItem', async () => {
     render(<CopyButton html="<p>test</p>" />)
     await userEvent.click(screen.getByRole('button'))
-    expect(mockWriteText).toHaveBeenCalledWith('<p>test</p>')
+    expect(mockWrite).toHaveBeenCalledTimes(1)
+    const [items] = mockWrite.mock.calls[0]
+    expect(items[0]).toBeInstanceOf(ClipboardItem)
   })
 
   it('shows success feedback after copy', async () => {

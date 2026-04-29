@@ -7,7 +7,12 @@ export function CopyButton({ html }: CopyButtonProps) {
 
   const handleCopy = useCallback(async () => {
     if (!html) return
-    await navigator.clipboard.writeText(html)
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([html], { type: 'text/plain' }),
+      }),
+    ])
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }, [html])
