@@ -18,7 +18,7 @@ describe('convertMarkdown', () => {
   it('syntax-highlights code block and removes class attrs', async () => {
     const html = await convertMarkdown('```js\nconst x = 1\n```', wechatGreen)
     expect(html).toContain('<pre')
-    expect(html).not.toContain('class="hljs')
+    expect(html).not.toContain('class=')
   })
 
   it('removes href from links', async () => {
