@@ -1,5 +1,7 @@
 import { useRef, useCallback } from 'react'
 
+const ALLOWED_EXTENSIONS = ['.md', '.txt']
+
 type EditorProps = {
   value: string
   onChange: (value: string) => void
@@ -11,6 +13,7 @@ export function Editor({ value, onChange }: EditorProps) {
   const readFile = useCallback((file: File) => {
     const reader = new FileReader()
     reader.onload = (ev) => onChange(ev.target?.result as string)
+    reader.onerror = () => console.error('Failed to read file:', file.name)
     reader.readAsText(file)
   }, [onChange])
 
@@ -23,7 +26,9 @@ export function Editor({ value, onChange }: EditorProps) {
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const file = e.dataTransfer.files?.[0]
-    if (file) readFile(file)
+    if (file && ALLOWED_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext))) {
+      readFile(file)
+    }
   }, [readFile])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
