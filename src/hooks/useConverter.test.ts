@@ -1,4 +1,5 @@
-import { convertMarkdown } from './useConverter'
+import { renderHook, act } from '@testing-library/react'
+import { convertMarkdown, useConverter } from './useConverter'
 import { wechatGreen } from '../themes/wechat-green'
 
 describe('convertMarkdown', () => {
@@ -45,5 +46,20 @@ describe('convertMarkdown', () => {
     expect(html).toContain('Section Two')
     // TOC list items should appear before the first section
     expect(html.indexOf('Section One')).toBeLessThan(html.lastIndexOf('Section One'))
+  })
+})
+
+describe('useConverter hook', () => {
+  it('debounces and returns html after 300ms', async () => {
+    vi.useFakeTimers()
+    const { result, rerender } = renderHook(
+      ({ md }: { md: string }) => useConverter(md, wechatGreen),
+      { initialProps: { md: '' } }
+    )
+    expect(result.current).toBe('')
+    rerender({ md: '# Hi' })
+    await act(() => vi.runAllTimersAsync())
+    expect(result.current).toContain('<h1')
+    vi.useRealTimers()
   })
 })

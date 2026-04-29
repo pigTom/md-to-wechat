@@ -32,13 +32,15 @@ export function useConverter(markdown: string, theme: Theme): string {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(async () => {
       const result = await convertMarkdown(markdown, theme)
-      setHtml(result)
+      if (!cancelled) setHtml(result)
     }, 300)
 
     return () => {
+      cancelled = true
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [markdown, theme])
