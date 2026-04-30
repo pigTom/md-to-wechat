@@ -1,13 +1,15 @@
 import { visit } from 'unist-util-visit'
 import type { Root, Element, Node, Text } from 'hast'
 import type { Plugin } from 'unified'
-import { instance as vizInstance, type Viz } from '@viz-js/viz'
+import type { Viz } from '@viz-js/viz'
 
 const DOT_LANGUAGES = new Set(['language-dot', 'language-graphviz'])
 
 let vizPromise: Promise<Viz> | null = null
 function getViz(): Promise<Viz> {
-  if (!vizPromise) vizPromise = vizInstance()
+  if (!vizPromise) {
+    vizPromise = import('@viz-js/viz').then(m => m.instance())
+  }
   return vizPromise
 }
 

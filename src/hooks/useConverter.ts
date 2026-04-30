@@ -5,29 +5,43 @@ import remarkToc from 'remark-toc'
 import remarkMath from 'remark-math'
 import remarkRehype from 'remark-rehype'
 import rehypeHighlight from 'rehype-highlight'
-import rehypeKatex from 'rehype-katex'
 import rehypeStringify from 'rehype-stringify'
 import { useEffect, useState, useRef } from 'react'
 import { inlineStylePlugin } from '../plugins/inlineStylePlugin'
 import { dotPlugin } from '../plugins/dotPlugin'
 import type { Theme } from '../themes/index'
 
+let rehypeKatexPromise: Promise<typeof import('rehype-katex').default> | null = null
+function loadRehypeKatex() {
+  if (!rehypeKatexPromise) {
+    rehypeKatexPromise = import('rehype-katex').then(m => m.default)
+  }
+  return rehypeKatexPromise
+}
+
 export async function convertMarkdown(markdown: string, theme: Theme): Promise<string> {
   if (!markdown.trim()) return ''
 
-  const result = await unified()
+  const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkToc, { heading: '目录', tight: true })
     .use(remarkMath)
     .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeKatex, { output: 'mathml' })
+
+  // KaTeX is only needed when the document actually contains math.
+  if (markdown.includes('$')) {
+    const rehypeKatex = await loadRehypeKatex()
+    processor.use(rehypeKatex, { output: 'mathml' })
+  }
+
+  processor
     .use(dotPlugin)
     .use(rehypeHighlight, { detect: true, ignoreMissing: true })
     .use(inlineStylePlugin, theme)
     .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(markdown)
 
+  const result = await processor.process(markdown)
   return String(result)
 }
 
