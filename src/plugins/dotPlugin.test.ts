@@ -15,12 +15,13 @@ async function process(md: string): Promise<string> {
 }
 
 describe('dotPlugin', () => {
-  it('renders a digraph code block as an SVG data-URL <img>', async () => {
+  it('renders a digraph code block as an <img> data URL', async () => {
     const html = await process(
       '```dot\ndigraph { a -> b; }\n```',
     )
     expect(html).toContain('<img')
-    expect(html).toContain('src="data:image/svg+xml,')
+    // Browser path produces image/png, jsdom test path falls back to svg+xml.
+    expect(html).toMatch(/src="data:image\/(png|svg\+xml)/)
     expect(html).not.toContain('<pre>')
     expect(html).not.toContain('<code')
   })
@@ -30,7 +31,7 @@ describe('dotPlugin', () => {
       '```graphviz\ngraph { a -- b; }\n```',
     )
     expect(html).toContain('<img')
-    expect(html).toContain('data:image/svg+xml')
+    expect(html).toMatch(/data:image\/(png|svg\+xml)/)
   })
 
   it('leaves non-dot code blocks untouched', async () => {

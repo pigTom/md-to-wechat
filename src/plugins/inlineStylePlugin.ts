@@ -19,6 +19,12 @@ export const inlineStylePlugin: Plugin<[Theme], Root> = (theme) => {
         classes.some(c => String(c) === 'task-list-item')
       ) {
         flattenTaskListItem(node)
+      } else if (node.tagName === 'li') {
+        // Generic <li> with mixed inline element + text children (e.g. "**bold** text"):
+        // WeChat wraps each top-level child of <li> in its own paragraph, breaking the
+        // line. Wrap the leading inline run into a single <span> so WeChat sees one
+        // child. Nested block children (sub-lists, paragraphs) are left alone.
+        wrapLiInlineRun(node)
       }
 
       // rehype-katex (output:'mathml') wraps formulas in
@@ -153,6 +159,37 @@ function flattenTaskListItem(li: Element) {
   if (after && after.type === 'text') {
     after.value = after.value.replace(/^\s+/, '')
   }
+}
+
+// Tags that a <li> may contain as its own block-level descendants. Anything not
+// in this set is treated as inline content and wrapped together; entries here
+// are left in place so e.g. nested <ul>/<ol> still nest correctly.
+const LI_BLOCK_CHILD_TAGS = new Set([
+  'ul', 'ol', 'dl', 'p', 'div', 'blockquote', 'pre', 'table',
+  'hr', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'figure',
+])
+
+function wrapLiInlineRun(li: Element) {
+  let blockIdx = li.children.findIndex(
+    c => c.type === 'element' && LI_BLOCK_CHILD_TAGS.has(c.tagName),
+  )
+  if (blockIdx === -1) blockIdx = li.children.length
+  if (blockIdx < 2) return // 0 or 1 inline children — nothing for WeChat to split
+
+  const inlineRun = li.children.slice(0, blockIdx)
+  // Pure-text inline runs are already a single text run after HTML normalization;
+  // WeChat doesn't split those. We only need to defend when there's at least one
+  // inline element (strong, em, code, a, …) sitting next to text.
+  const hasInlineElement = inlineRun.some(c => c.type === 'element')
+  if (!hasInlineElement) return
+
+  const wrapper: Element = {
+    type: 'element',
+    tagName: 'span',
+    properties: { style: 'display:inline;' },
+    children: inlineRun as ElementContent[],
+  }
+  li.children.splice(0, blockIdx, wrapper)
 }
 
 function preserveCodeWhitespace(node: Element) {

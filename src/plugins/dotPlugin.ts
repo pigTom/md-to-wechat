@@ -44,10 +44,19 @@ export const dotPlugin: Plugin<[], Root> = () => {
     for (let i = targets.length - 1; i >= 0; i--) {
       const { parent, index, source } = targets[i]
       const result = viz.render(source, { format: 'svg' })
-      parent.children[index] =
-        result.status === 'success'
-          ? svgToImg(result.output ?? '')
-          : errorBlock(result.errors.map(e => e.message).join('\n') || 'render failed')
+      if (result.status !== 'success') {
+        parent.children[index] = errorBlock(
+          result.errors.map(e => e.message).join('\n') || 'render failed',
+        )
+        continue
+      }
+      const svg = (result.output ?? '').replace(/<\?xml[^?]*\?>\s*/, '').trim()
+      // WeChat's pasted-image whitelist is bmp/png/jpeg/gif/webp — SVG data URLs are
+      // dropped on paste. Rasterize to PNG client-side; fall back to SVG only when
+      // the browser APIs are unavailable (e.g. jsdom in tests).
+      const png = await svgToPngDataUrl(svg)
+      const src = png ?? `data:image/svg+xml,${encodeURIComponent(svg)}`
+      parent.children[index] = imgNode(src)
     }
   }
 }
@@ -60,9 +69,7 @@ function textOf(el: Element): string {
   return out
 }
 
-function svgToImg(svg: string): Element {
-  const cleaned = svg.replace(/<\?xml[^?]*\?>\s*/, '').trim()
-  const src = `data:image/svg+xml,${encodeURIComponent(cleaned)}`
+function imgNode(src: string): Element {
   return {
     type: 'element',
     tagName: 'img',
@@ -72,6 +79,52 @@ function svgToImg(svg: string): Element {
       style: 'display:block;margin:1em auto;max-width:100%;',
     },
     children: [],
+  }
+}
+
+async function svgToPngDataUrl(svg: string): Promise<string | null> {
+  if (typeof document === 'undefined' || typeof Image === 'undefined') return null
+  // Probe canvas capability before kicking off the async Image load. jsdom (test
+  // env) returns null here and we bail out — without this guard, jsdom would
+  // accept the URL.createObjectURL + Image() calls but never fire onload, and
+  // every test using dotPlugin would hang on the 5s timeout.
+  if (!document.createElement('canvas').getContext('2d')) return null
+
+  let url: string | null = null
+  try {
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
+    url = URL.createObjectURL(blob)
+    const img = new Image()
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject(new Error('svg image load timeout')),
+        4000,
+      )
+      img.onload = () => { clearTimeout(timeout); resolve() }
+      img.onerror = () => { clearTimeout(timeout); reject(new Error('svg load failed')) }
+      img.src = url!
+    })
+    const w = img.naturalWidth || img.width
+    const h = img.naturalHeight || img.height
+    if (!w || !h) return null
+    const scale = 2 // render at 2x for sharpness on retina
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(w * scale)
+    canvas.height = Math.round(h * scale)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.scale(scale, scale)
+    // Paint a white background so the PNG isn't transparent — keeps the diagram
+    // legible against any WeChat editor / reader theme.
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(0, 0, w, h)
+    ctx.drawImage(img, 0, 0)
+    const dataUrl = canvas.toDataURL('image/png')
+    return dataUrl.startsWith('data:image/png') ? dataUrl : null
+  } catch {
+    return null
+  } finally {
+    if (url) URL.revokeObjectURL(url)
   }
 }
 

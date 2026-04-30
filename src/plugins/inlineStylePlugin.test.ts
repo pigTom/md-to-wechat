@@ -94,6 +94,29 @@ describe('inlineStylePlugin', () => {
     expect(html).toMatch(/<li[^>]*>☑ done item<\/li>/)
   })
 
+  it('wraps mixed <strong> + text inside <li> into a single <span>', () => {
+    const html = process('1. **专注** - 一个明确的问题域\n')
+    expect(html).toMatch(/<li[^>]*><span style="display:inline;[^"]*"><strong/)
+    expect(html).toContain('一个明确的问题域')
+  })
+
+  it('does not wrap pure-text <li> content', () => {
+    const html = process('- just plain text\n')
+    expect(html).not.toMatch(/<li[^>]*><span style="display:inline/)
+  })
+
+  it('does not wrap <li> with a single inline element', () => {
+    const html = process('- **only bold**\n')
+    expect(html).not.toMatch(/<li[^>]*><span style="display:inline/)
+  })
+
+  it('preserves nested sub-lists when wrapping <li> inline run', () => {
+    const html = process('1. **bold** text\n   - sub one\n')
+    // inline run wrapped, but <ul> sub-list still present at <li> top level
+    expect(html).toMatch(/<li[^>]*><span style="display:inline;[^"]*"><strong/)
+    expect(html).toMatch(/<\/span>[\s\S]*<ul/)
+  })
+
   it('removes disc bullet on task-list <ul>', () => {
     const html = process('- [ ] one\n- [x] two\n')
     expect(html).toMatch(/<ul[^>]*list-style:none/)
