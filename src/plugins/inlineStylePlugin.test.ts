@@ -1,5 +1,6 @@
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import remarkRehype from 'remark-rehype'
 import rehypeHighlight from 'rehype-highlight'
@@ -11,6 +12,7 @@ import { wechatGreen } from '../themes/wechat-green'
 function process(md: string) {
   return unified()
     .use(remarkParse)
+    .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypeHighlight, { detect: true, ignoreMissing: true })
     .use(inlineStylePlugin, wechatGreen)
@@ -69,7 +71,41 @@ describe('inlineStylePlugin', () => {
     // pre gets theme style; code inside also gets theme style — no overwrite
     const html = process('```js\ncode\n```')
     expect(html).toContain('background:#f5f5f5')  // pre style
-    expect(html).toContain('font-family:monospace') // code style
+    expect(html).toContain('monospace') // code font-family stack
+  })
+
+  it('inlines white-space:pre on <pre> so WeChat keeps indentation', () => {
+    const html = process('```ts\nfunction f() {\n  return 1\n}\n```')
+    expect(html).toContain('white-space:pre')
+    expect(html).toContain('tab-size:2')
+  })
+
+  it('inlines task-list checkbox as a single ☐ + text run inside <li>', () => {
+    const html = process('- [ ] todo item\n')
+    expect(html).not.toContain('<input')
+    expect(html).not.toContain('<span')
+    // li content should be exactly "☐ todo item" with no element wrapper inside
+    expect(html).toMatch(/<li[^>]*>☐ todo item<\/li>/)
+  })
+
+  it('inlines checked task-list checkbox as ☑ + text', () => {
+    const html = process('- [x] done item\n')
+    expect(html).not.toContain('<input')
+    expect(html).toMatch(/<li[^>]*>☑ done item<\/li>/)
+  })
+
+  it('removes disc bullet on task-list <ul>', () => {
+    const html = process('- [ ] one\n- [x] two\n')
+    expect(html).toMatch(/<ul[^>]*list-style:none/)
+  })
+
+  it('replaces newlines in <pre> with <br> and leading spaces with U+00A0', () => {
+    const html = process('```ts\nfunction f() {\n  return 1\n}\n```')
+    expect(html).toContain('<br>')
+    // U+00A0 (no-break space) replaces the 2-space indent that precedes a line
+    expect(html).toMatch(/<br>  /)
+    // raw "\n  return" (newline + ASCII spaces) should no longer appear in code
+    expect(html).not.toMatch(/\n {2}return/)
   })
 
   it('renders inline math as <img> with SVG src and inline styles', () => {

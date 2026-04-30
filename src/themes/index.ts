@@ -11,5 +11,5 @@ export type Theme = {
   hljs: Record<string, string>     // hljs class name (e.g. 'hljs-keyword') → color value
 }
 
-export const themes: Theme[] = [wechatGreen, techBlue, warm, rose]
-export const defaultTheme: Theme = wechatGreen
+export const themes: Theme[] = [techBlue, wechatGreen, warm, rose]
+export const defaultTheme: Theme = techBlue
