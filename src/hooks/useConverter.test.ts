@@ -39,6 +39,14 @@ describe('convertMarkdown', () => {
     expect(html).toContain('<em')
   })
 
+  it('renders single newlines between adjacent lines as <br>', async () => {
+    const md = '**相关故障：** 修复一个可能会修复其他\n**需要完整上下文：** 理解需要查看整个系统'
+    const html = await convertMarkdown(md, wechatGreen)
+    expect(html).toContain('<br>')
+    // Both bolded labels survive in the same <p>, separated by the <br>
+    expect(html).toMatch(/相关故障[\s\S]*<br>[\s\S]*需要完整上下文/)
+  })
+
   it('expands ## 目录 into a TOC list', async () => {
     const md = '## 目录\n\n## Section One\n\nContent\n\n## Section Two\n\nContent'
     const html = await convertMarkdown(md, wechatGreen)

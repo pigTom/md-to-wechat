@@ -86,6 +86,11 @@ export const inlineStylePlugin: Plugin<[Theme], Root> = (theme) => {
       // Strip all class attributes (WeChat ignores external CSS)
       delete props.className
 
+      // Drop empty style attributes so the serialized HTML stays compact.
+      if (typeof props.style === 'string' && !props.style.trim()) {
+        delete props.style
+      }
+
       // Remove href from links (WeChat blocks external URLs)
       if (node.tagName === 'a') {
         delete props.href

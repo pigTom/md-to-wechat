@@ -1,6 +1,7 @@
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
 import remarkToc from 'remark-toc'
 import remarkMath from 'remark-math'
 import remarkRehype from 'remark-rehype'
@@ -25,6 +26,10 @@ export async function convertMarkdown(markdown: string, theme: Theme): Promise<s
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
+    // Treat single newlines as hard breaks. WeChat-style writing rarely follows
+    // CommonMark's "blank line between paragraphs" rule — without this, two
+    // adjacent lines collapse into one paragraph joined by a space.
+    .use(remarkBreaks)
     .use(remarkToc, { heading: '目录', tight: true })
     .use(remarkMath)
     .use(remarkRehype, { allowDangerousHtml: true })
