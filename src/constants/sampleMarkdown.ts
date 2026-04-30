@@ -47,4 +47,15 @@ $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
 | 数学公式 | ✅ |
 | 目录生成 | ✅ |
 | 多主题 | ✅ |
+| Graphviz | ✅ |
+
+## Graphviz 图
+
+\`\`\`dot
+digraph G {
+  rankdir=LR;
+  node [shape=box, style=rounded];
+  Markdown -> Remark -> Rehype -> WeChat;
+}
+\`\`\`
 `

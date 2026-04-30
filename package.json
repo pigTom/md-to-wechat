@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@viz-js/viz": "^3.26.0",
     "katex": "^0.16.45",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

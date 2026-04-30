@@ -9,6 +9,7 @@ import rehypeKatex from 'rehype-katex'
 import rehypeStringify from 'rehype-stringify'
 import { useEffect, useState, useRef } from 'react'
 import { inlineStylePlugin } from '../plugins/inlineStylePlugin'
+import { dotPlugin } from '../plugins/dotPlugin'
 import type { Theme } from '../themes/index'
 
 export async function convertMarkdown(markdown: string, theme: Theme): Promise<string> {
@@ -21,6 +22,7 @@ export async function convertMarkdown(markdown: string, theme: Theme): Promise<s
     .use(remarkMath)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeKatex, { output: 'mathml' })
+    .use(dotPlugin)
     .use(rehypeHighlight, { detect: true, ignoreMissing: true })
     .use(inlineStylePlugin, theme)
     .use(rehypeStringify, { allowDangerousHtml: true })
